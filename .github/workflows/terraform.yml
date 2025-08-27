@@ -44,10 +44,11 @@ jobs:
       - name: Checkout Repository                            #Repo se code hum hummare VM me daal rahe
         uses: actions/checkout@v5                            #actions is kind of Task here
       
-      - name: Azure Login using OIDC
+      - name: Azure Login via OIDC
         uses: azure/login@v2
         with:
-          auth-type: OIDC
+          auth-type: SERVICE_PRINCIPAL
+          creds: ${{ secrets.AZURE_CREDENTIALS }} # federated SP creds JSON
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         
