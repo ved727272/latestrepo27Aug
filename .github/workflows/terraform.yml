@@ -23,7 +23,7 @@ env:
 
 jobs:
   Terraform-Plan:                                                #job ka naam diya
-    runs-on: ubuntu-latest                                  #Microsoft Hosted Runner liya hai maine
+    runs-on: raman                                  #Microsoft Hosted Runner liya hai maine
 
     steps:     
      - name: Checkout Repository                            #Repo se code hum hummare VM me daal rahe
@@ -59,7 +59,7 @@ jobs:
        run: terraform plan 
 
   Terraform-Apply:                                                #job ka naam diya
-    runs-on: ubuntu-latest                                  #Microsoft Hosted Runner liya hai maine
+    runs-on: raman                                  #Microsoft Hosted Runner liya hai maine
     needs: Terraform-Plan
     
     steps:     
