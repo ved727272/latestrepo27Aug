@@ -42,8 +42,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: latest
-
+          terraform_version: 1.13.1
       - name: Terraform Init
         run: terraform init -backend-config="resource_group_name=${{ secrets.RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.STORAGE_ACCOUNT_NAME }}" -backend-config="container_name=${{ secrets.CONTAINER_NAME }}" -backend-config="key=${{ secrets.STATE_FILE }}"
 
@@ -75,7 +74,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: latest
+          terraform_version: 1.13.1
 
       - name: Terraform Init
         run: terraform init -backend-config="resource_group_name=${{ secrets.RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.STORAGE_ACCOUNT_NAME }}" -backend-config="container_name=${{ secrets.CONTAINER_NAME }}" -backend-config="key=${{ secrets.STATE_FILE }}"
