@@ -1,6 +1,4 @@
 name: my first workflow
-
-
 on:
   push:
     branches:
@@ -21,7 +19,7 @@ env:
   STATE_FILE: ${{ secrets.STATE_FILE }}
 
 jobs:
-  Terraforminfracreation
+  Terraforminfracreation:
     runs-on: raman
     steps:
       - name: checkout code
@@ -40,6 +38,8 @@ jobs:
           -backend-config="key=${{ secrets.STATE_FILE }}"
       - name: Terraform Validate
         run: terraform validate
+      - name: Terraform-Plan
+        run: terraform plan  
         
   TerraformApply
     runs-on: raman
