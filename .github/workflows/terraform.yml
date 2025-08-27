@@ -41,9 +41,9 @@ jobs:
       - name: Terraform-Plan
         run: terraform plan  
         
-  TerraformApply
+  TerraformApply:
     runs-on: raman
-    needs: Terraform-Plan
+    needs: Terraforminfracreation
     steps: 
       - name: Checkout Repository                            #Repo se code hum hummare VM me daal rahe
         uses: actions/checkout@v5                            #actions is kind of Task here
