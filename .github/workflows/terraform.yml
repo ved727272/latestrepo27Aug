@@ -2,13 +2,9 @@ name: Terraform Infra Creation
 
 on:
   push:
-    branches:
-      - main
-      - feature/**
-      - release/**
+    branches: [ main, feature/**, release/** ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -23,67 +19,87 @@ env:
 
 jobs:
   Terraform-Plan:
-    runs-on: raman   # self-hosted runner ka label
+    runs-on: raman
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v5
 
       - name: Azure Login
-        uses: Azure/login@v2
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Debug Azure Context
+      # ⭐ Self-hosted fix: pass creds to Terraform/Backend explicitly
+      - name: Export Azure Credentials for Terraform
         run: |
-          az account show
-          terraform -version
+          echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $Env:GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $Env:GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $Env:GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $Env:GITHUB_ENV
+        shell: pwsh
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.13.1
-      - name: Terraform Init
-        run: terraform init -backend-config="resource_group_name=${{ secrets.RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.STORAGE_ACCOUNT_NAME }}" -backend-config="container_name=${{ secrets.CONTAINER_NAME }}" -backend-config="key=${{ secrets.STATE_FILE }}"
+
+      - name: Debug Context
+        run: |
+          terraform -version
+          az account show
+
+      - name: Terraform Init (AAD backend)
+        run: terraform init -backend-config="resource_group_name=${{ secrets.RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.STORAGE_ACCOUNT_NAME }}" -backend-config="container_name=${{ secrets.CONTAINER_NAME }}" -backend-config="key=${{ secrets.STATE_FILE }}" -backend-config="use_azuread_auth=true"
 
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan
+        run: terraform plan -out=tfplan
 
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan
 
   Terraform-Apply:
-    runs-on: raman   # self-hosted runner ka label
+    runs-on: raman
     needs: Terraform-Plan
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v5
 
       - name: Azure Login
-        uses: Azure/login@v2
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Debug Azure Context
+      - name: Export Azure Credentials for Terraform
         run: |
-          az account show
-          terraform -version
+          echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $Env:GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $Env:GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $Env:GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $Env:GITHUB_ENV
+        shell: pwsh
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.13.1
 
-      - name: Terraform Init
-        run: terraform init -backend-config="resource_group_name=${{ secrets.RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.STORAGE_ACCOUNT_NAME }}" -backend-config="container_name=${{ secrets.CONTAINER_NAME }}" -backend-config="key=${{ secrets.STATE_FILE }}"
+      - name: Terraform Init (AAD backend)
+        run: terraform init -backend-config="resource_group_name=${{ secrets.RESOURCE_GROUP }}" -backend-config="storage_account_name=${{ secrets.STORAGE_ACCOUNT_NAME }}" -backend-config="container_name=${{ secrets.CONTAINER_NAME }}" -backend-config="key=${{ secrets.STATE_FILE }}" -backend-config="use_azuread_auth=true"
 
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        run: terraform plan
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve tfplan
+
+      - name: Verify RGs
+        run: az group list -o table
