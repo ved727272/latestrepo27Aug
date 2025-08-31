@@ -23,12 +23,7 @@ jobs:
         uses: azure/login@v2
         with: 
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Azure CLI script
-        uses: azure/cli@v2
-        with:
-          azcliversion: latest
-          inlineScript: |
-            az account show
+      
       - name: HashiCorp - Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
