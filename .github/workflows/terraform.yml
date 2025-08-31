@@ -39,12 +39,11 @@ jobs:
           STATE_KEY: ${{ secrets.STATE_KEY }}
           
       - name: Validate Configuration
-        uses: tf-actions/validate@v1
+        run: terraform validate
       
       - name: terraform plan
-        uses: dflook/terraform-plan@v2
-        with:
-          path: my-terraform-config  
+        run: terraform plan
+    
 
 
         
