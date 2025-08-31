@@ -6,6 +6,9 @@ on:
       - main
       - features/**
   workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
 
 env:
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
