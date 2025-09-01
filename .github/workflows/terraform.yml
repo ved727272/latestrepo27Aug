@@ -1,11 +1,11 @@
-name: rg creation
+name: Terraform Deploy
 
 on:
+  workflow_dispatch:   # aap manually bhi run kar sakte ho
   push:
     branches:
       - main
       - features/**
-  workflow_dispatch:
 permissions:
   id-token: write
   contents: read
@@ -19,15 +19,17 @@ env:
 
 jobs: 
   terraform_plan:
-    runs-on: raman
+    runs-on: [self-hosted, windows, agent]
     steps:
-      - name: checkout code
-        uses: actions/checkout@v5
-      - name: Azure account login
-        uses: azure/login@v2
-        with: 
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
+      - name: Checkout Code
+        uses: actions/checkout@v4
+         
+      - name: Azure Login (OIDC)
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: HashiCorp - Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
