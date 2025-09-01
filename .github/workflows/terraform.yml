@@ -19,7 +19,7 @@ env:
 
 jobs: 
   terraform_plan:
-    runs-on: [self-hosted, windows, agent]
+    runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
